@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>清醒跑者：無酒日大挑戰</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
-
     <style>
         body {
             margin: 0;
@@ -31,8 +26,8 @@
             width: 100%;
             height: 100%;
         }
-        .dizzy-effect { filter: brightness(0.7) grayscale(0.3); }
-        .low-hp-border { box-shadow: inset 0 0 120px rgba(0,0,0,0.5); }
+        .dizzy-effect { filter: brightness(0.7) grayscale(0.3) blur(1px); }
+        .low-hp-border { box-shadow: inset 0 0 120px rgba(220, 38, 38, 0.4); }
         .ui-overlay {
             position: absolute;
             top: 0;
@@ -47,13 +42,15 @@
             z-index: 50;
         }
         .hidden { display: none !important; }
+        .gender-btn.active-m { border-color: #3b82f6; color: #3b82f6; background-color: #eff6ff; }
+        .gender-btn.active-f { border-color: #ec4899; color: #ec4899; background-color: #fdf2f8; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <!-- 頂部資訊欄 -->
-    <div id="hud" class="absolute top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none">
+    <div id="hud" class="absolute top-4 left-4 right-4 flex justify-between items-center z-10 pointer-events-none opacity-0 transition-opacity duration-500">
         <div class="bg-white/90 px-4 py-2 rounded-full shadow-lg border border-gray-200">
             <span class="font-bold text-gray-700">❤️ 健康值: </span>
             <span id="hp-display" class="text-xl text-red-500 font-black">50</span>
@@ -77,9 +74,9 @@
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-80 text-left border-4 border-blue-200 text-gray-700 leading-relaxed">
             <p class="mb-3">🏃 <b>操作方式：</b><br>點擊螢幕、按下空白鍵或上方向鍵來跳躍。</p>
             <p class="mb-3">⚠️ <b>危險誘惑：</b><br>避開「飲酒 🍾」與「酒局 🍻」，它們會讓你扣血、頭暈甚至嘔吐停頓！</p>
-            <p class="mb-4">💖 <b>健康補給：</b><br>收集「醫療服務 ✝️」、「心理治療 ❤️」與「親友支持 👥」來恢復健康並解除頭暈狀態。</p>
+            <p class="mb-6">💖 <b>健康補給：</b><br>收集「醫療服務 ✝️」、「心理治療 ❤️」與「親友支持 👥」來恢復健康並解除頭暈狀態。</p>
             
-            <button id="next-to-login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition transform hover:scale-105">
+            <button id="next-to-login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition transform active:scale-95">
                 我準備好了
             </button>
         </div>
@@ -92,10 +89,10 @@
             <p class="text-gray-600 mb-2 font-medium">請輸入您的資訊以開始挑戰</p>
             <input type="text" id="nickname-input" placeholder="您的暱稱" class="w-full border-2 border-blue-200 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
             <div class="flex gap-4 mb-6">
-                <button id="gender-m" class="gender-btn flex-1 py-2 border-2 border-blue-200 rounded-lg font-bold text-gray-500 hover:border-blue-500 transition">男生</button>
-                <button id="gender-f" class="gender-btn flex-1 py-2 border-2 border-blue-200 rounded-lg font-bold text-gray-500 hover:border-pink-500 transition">女生</button>
+                <button id="gender-m" class="gender-btn flex-1 py-2 border-2 border-blue-200 rounded-lg font-bold text-gray-500 transition">男生</button>
+                <button id="gender-f" class="gender-btn flex-1 py-2 border-2 border-blue-200 rounded-lg font-bold text-gray-500 transition">女生</button>
             </div>
-            <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition transform hover:scale-105">開始挑戰</button>
+            <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition transform active:scale-95">開始挑戰</button>
         </div>
     </div>
 
@@ -107,11 +104,11 @@
             <p class="text-gray-700 font-bold mb-4">您達成清醒生活的新里程碑！</p>
             <div class="text-left bg-gray-50 p-4 rounded-xl mb-6 text-sm leading-relaxed">
                 <p class="mb-2">🏆 <b>今日成就：</b> 您在路徑中成功抵禦了酒精誘惑，並主動尋求了醫療與家人的支持。</p>
-                <p>💡 <b>個管師叮嚀：</b> 就像遊戲一樣，當你感到「頭暈」或生活節奏「緩速」時，別忘了找專業個管師聊聊，我們會幫你恢復動力！</p>
+                <p>💡 <b>叮嚀：</b> 就像遊戲一樣，當你感到「頭暈」或生活節奏「緩速」時，別忘了找專業個管師聊聊！</p>
             </div>
             <div class="flex flex-col gap-3">
                 <button onclick="location.reload()" class="bg-green-600 text-white font-bold px-8 py-3 rounded-full hover:bg-green-700 transition">再玩一次</button>
-                <button onclick="showFeedbackModal()" class="bg-gray-100 text-gray-700 border-2 border-gray-200 font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition">💬 提供遊玩回饋</button>
+                <button id="show-feedback-won" class="bg-gray-100 text-gray-700 border-2 border-gray-200 font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition">💬 提供遊玩回饋</button>
             </div>
         </div>
     </div>
@@ -123,11 +120,11 @@
             <h3 class="text-2xl font-black text-red-600 mb-2">沒關係，我們再試一次</h3>
             <p class="text-gray-700 mb-4">生活偶爾會失控，但起點永遠在那裡。</p>
             <div class="text-left bg-gray-50 p-4 rounded-xl mb-6 text-sm leading-relaxed">
-                <p>⚠️ <b>溫馨提醒：</b> 剛才的酒瓶是否讓畫面變暗了？現實中也是如此。尋找「十字架」或「愛心」，能幫你更快看清前方的路。</p>
+                <p>⚠️ <b>提醒：</b> 酒精會讓畫面模糊並降低反應能力。尋找「十字架」或「愛心」，能幫你恢復清醒。</p>
             </div>
             <div class="flex flex-col gap-3">
                 <button onclick="location.reload()" class="bg-blue-600 text-white font-bold px-8 py-3 rounded-full hover:bg-blue-700 transition">回到起點再試一次</button>
-                <button onclick="showFeedbackModal()" class="bg-gray-100 text-gray-700 border-2 border-gray-200 font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition">💬 提供遊玩回饋</button>
+                <button id="show-feedback-lost" class="bg-gray-100 text-gray-700 border-2 border-gray-200 font-bold px-8 py-3 rounded-full hover:bg-gray-200 transition">💬 提供遊玩回饋</button>
             </div>
         </div>
     </div>
@@ -140,8 +137,8 @@
             <div id="feedback-error" class="text-red-500 text-sm mb-2 hidden font-bold">請輸入回饋內容後再送出喔！</div>
             <textarea id="feedback-text" rows="4" class="w-full border-2 border-gray-200 rounded-xl p-3 focus:outline-none focus:border-blue-500 mb-4 resize-none" placeholder="寫下您的想法、建議或遇到的問題..."></textarea>
             <div class="flex gap-3">
-                <button onclick="closeFeedbackModal()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">取消</button>
-                <button onclick="submitFeedback()" id="submit-feedback-btn" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">送出回饋</button>
+                <button id="close-feedback-btn" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">取消</button>
+                <button id="submit-feedback-btn" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">送出回饋</button>
             </div>
         </div>
     </div>
@@ -150,41 +147,48 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 🔴 重要：如果您是在自己的伺服器架設，請將下方的內容替換成您 Firebase 的 Config 物件
-    // 如果您不知道怎麼拿，請參考 Firebase 控制台的專案設定。
-    let firebaseConfig;
-    try {
-        firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { /* 在此貼上您的 Firebase Config, 例如 apiKey: "...", authDomain: "..." */ };
-            
-        if (!firebaseConfig.apiKey) {
-            console.error("尚未設定 Firebase Config！按鈕功能可能失效。");
-        }
-    } catch (e) {
-        console.error("Firebase Config 解析錯誤", e);
-        firebaseConfig = {};
-    }
-
+    // Firebase 配置與初始化
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'sober-runner-challenge';
 
+    let user = null;
+
+    // 處理身份驗證 (Rule 3)
+    const initAuth = async () => {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (e) {
+            console.error("Auth failed", e);
+        }
+    };
+    initAuth();
+
+    onAuthStateChanged(auth, (u) => {
+        user = u;
+    });
+
+    // 遊戲參數與邏輯
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('game-container');
     const hpEl = document.getElementById('hp-display');
     const timeEl = document.getElementById('time-display');
+    const hud = document.getElementById('hud');
     
-    let gameState = 'LOGIN';
+    let gameState = 'IDLE';
     let nickname = "";
     let gender = "male"; 
     let startTime = null;
-    let userId = null;
     let playTime = 0; 
     let obstaclesHit = 0;   
     let itemsCollected = 0; 
@@ -204,7 +208,7 @@
 
     let player = {
         x: 80, y: 0, width: 60, height: 80, vy: 0,
-        gravity: 1.4, jumpPower: -20.5, isGrounded: false, state: 'normal'
+        gravity: 1.4, jumpPower: -21, isGrounded: false, state: 'normal'
     };
 
     let obstacles = [];
@@ -219,159 +223,115 @@
         HEART: "❤️", FAMILY: "👥", CLOUD: "☁️", SUN: "☀️"   
     };
 
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyORhzHWFPmpylnBxhi3EXTLuPuxFV7mkwaJZ6WIpj_DiUYPTQ_8-yhZaSwdvsRtVQy-A/exec";
-
-    async function logGame(status) {
-        if (!userId) return;
+    // 資料紀錄 (Rule 1: Strict Paths)
+    async function logGameResult(status) {
+        if (!user) return;
         try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gameLogs'), {
-                userId: userId, nickname: nickname, gender: gender, status: status,
-                startTime: startTime, endTime: serverTimestamp(), finalHp: hp,
-                distance: Math.floor(distance), obstaclesHit: obstaclesHit, itemsCollected: itemsCollected
+                userId: user.uid,
+                nickname: nickname,
+                gender: gender,
+                status: status,
+                finalHp: Math.floor(hp),
+                distance: Math.floor(distance),
+                obstaclesHit: obstaclesHit,
+                itemsCollected: itemsCollected,
+                playTime: Math.floor(playTime),
+                timestamp: serverTimestamp()
             });
         } catch (e) { console.error("Firebase Log error", e); }
-
-        try {
-            const end = new Date();
-            const start = new Date(end.getTime() - Math.floor(playTime) * 1000);
-            const gameData = {
-                type: 'log', 
-                userId: userId, nickname: nickname, gender: gender === 'male' ? '男' : '女',
-                status: status === 'WON' ? '成功' : '失敗',
-                startTime: start.toLocaleString('zh-TW'), endTime: end.toLocaleString('zh-TW'),
-                playTime: Math.floor(playTime), obstaclesHit: obstaclesHit, itemsCollected: itemsCollected
-            };
-            await fetch(GOOGLE_SHEET_URL, {
-                method: "POST", mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(gameData)
-            });
-        } catch (error) { console.error("試算表上傳失敗", error); }
     }
 
-    window.showFeedbackModal = function() {
-        document.getElementById('feedback-modal').classList.remove('hidden');
-        document.getElementById('feedback-text').value = '';
-        document.getElementById('feedback-error').classList.add('hidden');
-        document.getElementById('submit-feedback-btn').innerText = '送出回饋';
-        document.getElementById('submit-feedback-btn').disabled = false;
-    };
-
-    window.closeFeedbackModal = function() {
-        document.getElementById('feedback-modal').classList.add('hidden');
-    };
-
-    window.submitFeedback = async function() {
-        const text = document.getElementById('feedback-text').value.trim();
-        const errorMsg = document.getElementById('feedback-error');
-        const btn = document.getElementById('submit-feedback-btn');
-
-        if (!text) { errorMsg.classList.remove('hidden'); return; }
-        
-        errorMsg.classList.add('hidden');
-        btn.disabled = true; btn.innerText = '傳送中...';
-
-        let isSuccess = false;
-        try {
-            const feedbackData = {
-                type: 'feedback', userId: userId || '未知ID', 
-                nickname: nickname || '未命名', feedback: text
-            };
-            await fetch(GOOGLE_SHEET_URL, {
-                method: "POST", mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(feedbackData)
-            });
-            isSuccess = true; 
-        } catch(e) { console.error("試算表回饋上傳失敗", e); }
-
-        try {
-            if (userId && firebaseConfig.apiKey) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedbacks'), {
-                    userId: userId, nickname: nickname, text: text, timestamp: serverTimestamp()
-                });
-            }
-        } catch(e) { console.error("Firebase回饋上傳失敗", e); }
-
-        if (isSuccess) {
-            btn.innerText = '✅ 感謝您的回饋';
-            setTimeout(() => { closeFeedbackModal(); }, 1500);
-        } else {
-            btn.innerText = '送出失敗，請重試';
-            btn.disabled = false;
-        }
-    };
-
-    function init() {
-        resize();
-        window.addEventListener('resize', resize);
-
+    // UI 事件監聽
+    const setupUI = () => {
         const mBtn = document.getElementById('gender-m');
         const fBtn = document.getElementById('gender-f');
         
         mBtn.onclick = () => {
             gender = 'male';
-            mBtn.classList.add('border-blue-500', 'text-blue-500');
-            mBtn.classList.remove('border-blue-200', 'text-gray-500');
-            fBtn.classList.remove('border-pink-500', 'text-pink-500');
-            fBtn.classList.add('border-blue-200', 'text-gray-500');
+            mBtn.classList.add('active-m');
+            mBtn.classList.remove('active-f');
+            fBtn.classList.remove('active-f', 'active-m');
         };
         
         fBtn.onclick = () => {
             gender = 'female';
-            fBtn.classList.add('border-pink-500', 'text-pink-500');
-            fBtn.classList.remove('border-blue-200', 'text-gray-500');
-            mBtn.classList.remove('border-blue-500', 'text-blue-500');
-            mBtn.classList.add('border-blue-200', 'text-gray-500');
+            fBtn.classList.add('active-f');
+            fBtn.classList.remove('active-m');
+            mBtn.classList.remove('active-m', 'active-f');
         };
         mBtn.click();
-
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.code === 'ArrowUp') jump();
-        });
-        
-        window.addEventListener('touchstart', (e) => {
-            if (gameState === 'PLAYING') {
-                if (e.target === canvas) e.preventDefault();
-                jump();
-            }
-        }, { passive: false });
-
-        window.addEventListener('mousedown', (e) => {
-            if (gameState === 'PLAYING' && e.button === 0) jump();
-        });
 
         document.getElementById('next-to-login-btn').onclick = () => {
             document.getElementById('instruction-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         };
 
-        document.getElementById('start-btn').onclick = async function() {
+        document.getElementById('start-btn').onclick = () => {
             const input = document.getElementById('nickname-input').value.trim();
-            if (!input) return;
-
-            if (!firebaseConfig.apiKey) {
-                alert("抱歉，Firebase 設定未完成，無法開始遊戲紀錄。請檢查程式碼中的 Config 設定。");
+            if (!input) {
+                document.getElementById('nickname-input').classList.add('border-red-500');
                 return;
             }
-            
-            this.disabled = true;
-            this.innerText = "載入中...";
             nickname = input;
             document.getElementById('nickname-tag').innerText = nickname;
-            
+            startGame();
+        };
+
+        const showFeedback = () => {
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-text').value = '';
+            document.getElementById('feedback-error').classList.add('hidden');
+        };
+
+        document.getElementById('show-feedback-won').onclick = showFeedback;
+        document.getElementById('show-feedback-lost').onclick = showFeedback;
+        document.getElementById('close-feedback-btn').onclick = () => document.getElementById('feedback-modal').classList.add('hidden');
+
+        document.getElementById('submit-feedback-btn').onclick = async () => {
+            const text = document.getElementById('feedback-text').value.trim();
+            if (!text) {
+                document.getElementById('feedback-error').classList.remove('hidden');
+                return;
+            }
+            if (!user) return;
+
+            const btn = document.getElementById('submit-feedback-btn');
+            btn.disabled = true;
+            btn.innerText = "傳送中...";
+
             try {
-                await signInAnonymously(auth);
-                userId = auth.currentUser.uid;
-                startGame();
-            } catch (error) {
-                console.error("登入失敗", error);
-                alert("連線失敗：" + error.message);
-                this.disabled = false;
-                this.innerText = "開始挑戰";
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedbacks'), {
+                    userId: user.uid,
+                    nickname: nickname,
+                    text: text,
+                    timestamp: serverTimestamp()
+                });
+                btn.innerText = "✅ 已送出";
+                setTimeout(() => {
+                    document.getElementById('feedback-modal').classList.add('hidden');
+                    btn.disabled = false;
+                    btn.innerText = "送出回饋";
+                }, 1500);
+            } catch (e) {
+                btn.innerText = "傳送失敗";
+                btn.disabled = false;
             }
         };
-    }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') jump();
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            jump();
+        }, { passive: false });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) jump();
+        });
+    };
 
     function resize() {
         const dpr = window.devicePixelRatio || 1;
@@ -379,8 +339,6 @@
         logicalHeight = container.clientHeight;
         canvas.width = logicalWidth * dpr;
         canvas.height = logicalHeight * dpr;
-        canvas.style.width = `${logicalWidth}px`;
-        canvas.style.height = `${logicalHeight}px`;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         groundY = logicalHeight * 0.8;
         player.y = groundY - player.height;
@@ -390,22 +348,22 @@
         gameState = 'PLAYING';
         hp = 50; distance = 0; playTime = 0; obstaclesHit = 0; itemsCollected = 0; 
         timeEl.innerText = "00:00"; totalPixelsTraveled = 0;
-        lastSpawnDistance = -100; 
+        lastSpawnDistance = -50; 
         isFirstSpawn = true; isDizzy = false; isVomiting = false;
-        nextSpawnDistance = 45; 
-        gameSpeed = baseSpeed; obstacles = []; items = []; clouds = [];
+        nextSpawnDistance = 40; 
+        obstacles = []; items = []; clouds = [];
         
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             clouds.push({
                 x: Math.random() * logicalWidth,
-                y: 30 + Math.random() * 150,
+                y: 50 + Math.random() * 150,
                 speed: 0.2 + Math.random() * 0.5,
-                size: 50 + Math.random() * 40
+                size: 40 + Math.random() * 40
             });
         }
         
-        startTime = serverTimestamp();
         document.getElementById('login-screen').classList.add('hidden');
+        hud.classList.remove('opacity-0');
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
     }
@@ -431,7 +389,7 @@
     function update(dt) {
         if (isVomiting) {
             vomitTimer -= dt;
-            if (vomitTimer <= 0) { isVomiting = false; gameSpeed = baseSpeed; }
+            if (vomitTimer <= 0) { isVomiting = false; }
             return;
         }
 
@@ -444,22 +402,16 @@
         if (hp < 30) container.classList.add('low-hp-border');
         else container.classList.remove('low-hp-border');
 
-        if (hp >= 80) player.state = 'proud';
-        else if (hp < 40) player.state = 'slumped';
-        else player.state = 'normal';
-
         if (isDizzy) container.classList.add('dizzy-effect');
         else container.classList.remove('dizzy-effect');
 
-        let targetSpeed = 4.5 + (hp / 100) * 5.0; 
-        gameSpeed = targetSpeed * (isDizzy ? 0.85 : 1.0);
-        
-        if (gameSpeed > 9.5) gameSpeed = 9.5;
-        if (gameSpeed < 5 && hp > 0) gameSpeed = 5;
+        // 速度根據健康值動態調整
+        let targetSpeed = 5 + (hp / 100) * 5.0; 
+        gameSpeed = targetSpeed * (isDizzy ? 0.7 : 1.0);
         
         clouds.forEach(c => {
             c.x -= (c.speed + gameSpeed * 0.05);
-            if (c.x < -100) { c.x = logicalWidth + 50; c.y = 30 + Math.random() * 150; }
+            if (c.x < -100) { c.x = logicalWidth + 50; c.y = 50 + Math.random() * 150; }
         });
 
         distance += gameSpeed * 0.1;
@@ -474,62 +426,38 @@
             player.isGrounded = true;
         }
 
+        // 生成邏輯
         if (distance - lastSpawnDistance > nextSpawnDistance) {
-            if (isFirstSpawn) {
-                spawnObstacle(0);
-                isFirstSpawn = false;
-                nextSpawnDistance = 50; 
-            } else if (isDizzy) {
-                if (Math.random() > 0.4) { spawnItem(0, 'CROSS'); nextSpawnDistance = 45; }
-                else { spawnObstacle(0); spawnItem(150, 'CROSS'); nextSpawnDistance = 60; }
-            } else {
-                const scenario = Math.random();
-                const isLateGame = playTime > 40; 
-                
-                if (isLateGame) {
-                    if (scenario < 0.3) { 
-                        spawnObstacle(0); 
-                        if(Math.random() > 0.5) spawnObstacle(300); 
-                        nextSpawnDistance = 70; 
-                    }
-                    else if (scenario < 0.6) { 
-                        spawnItem(0); 
-                        if(Math.random() > 0.5) spawnItem(200); 
-                        nextSpawnDistance = 55; 
-                    }
-                    else { 
-                        spawnObstacle(0); 
-                        spawnItem(220); 
-                        nextSpawnDistance = 65; 
-                    }
-                } else {
-                    if (scenario < 0.35) { 
-                        spawnObstacle(0); 
-                        nextSpawnDistance = 50 + Math.random() * 15; 
-                    }
-                    else if (scenario < 0.65) { 
-                        spawnItem(0); 
-                        nextSpawnDistance = 45 + Math.random() * 15; 
-                    }
-                    else { 
-                        spawnObstacle(0); 
-                        spawnItem(250); 
-                        nextSpawnDistance = 65 + Math.random() * 15; 
-                    }
-                }
-            }
+            const rand = Math.random();
+            if (rand < 0.45) spawnObstacle();
+            else spawnItem();
+            
             lastSpawnDistance = distance;
+            nextSpawnDistance = 35 + Math.random() * 25;
         }
 
+        // 碰撞檢查
         obstacles.forEach((obs, index) => {
             obs.x -= gameSpeed;
-            if (checkCollision(player, obs, 'OBSTACLE')) { handleHit(obs); obstacles.splice(index, 1); }
+            if (checkCollision(player, obs)) {
+                obstaclesHit++;
+                if (obs.type === 'BOTTLE') { hp -= 12; isDizzy = true; } 
+                else { hp -= 20; isVomiting = true; vomitTimer = 1200; isDizzy = true; }
+                obstacles.splice(index, 1);
+            }
             if (obs.x < -100) obstacles.splice(index, 1);
         });
 
         items.forEach((item, index) => {
             item.x -= gameSpeed;
-            if (checkCollision(player, item, 'ITEM')) { handlePick(item); items.splice(index, 1); }
+            if (checkCollision(player, item)) {
+                itemsCollected++;
+                if (item.type === 'CROSS') { isDizzy = false; hp += 8; }
+                else if (item.type === 'HEART') hp += 15;
+                else hp += 20;
+                if (hp > 100) hp = 100;
+                items.splice(index, 1);
+            }
             if (item.x < -100) items.splice(index, 1);
         });
 
@@ -537,137 +465,86 @@
         if (hp >= 100) endGame('WON');
     }
 
-    function spawnObstacle(offsetX = 0) {
-        const x = logicalWidth + 50 + offsetX;
-        const isParty = Math.random() < 0.3; 
-        if (isParty) {
-            obstacles.push({ x, y: groundY - 42, width: 40, height: 40, type: 'PARTY', label: ASSETS.PARTY });
-        } else {
-            const maxBottles = hp < 30 ? 2 : 3;
-            const count = Math.floor(Math.random() * maxBottles) + 1; 
-            for (let i = 0; i < count; i++) {
-                obstacles.push({ x: x + (i * 28), y: groundY - 42, width: 30, height: 40, type: 'BOTTLE', label: ASSETS.BOTTLE });
-            }
-        }
+    function spawnObstacle() {
+        const x = logicalWidth + 50;
+        const type = Math.random() < 0.3 ? 'PARTY' : 'BOTTLE';
+        obstacles.push({ x, y: groundY - 45, width: 40, height: 45, type, label: ASSETS[type] });
     }
 
-    function spawnItem(offsetX = 0, forceType = null) {
-        const x = logicalWidth + 50 + offsetX;
-        let itemType = 'CROSS';
-        if (forceType) {
-            itemType = forceType; 
-        } else {
-            const rand = Math.random();
-            if (rand > 0.6) itemType = 'HEART';
-            if (rand > 0.85) itemType = 'FAMILY';
-        }
-        const randomHeight = 130 + (Math.random() * 50); 
-        items.push({ x, y: groundY - randomHeight - 55, width: 55, height: 55, type: itemType, label: ASSETS[itemType] });
+    function spawnItem() {
+        const x = logicalWidth + 50;
+        const rand = Math.random();
+        let type = 'CROSS';
+        if (rand > 0.4) type = 'HEART';
+        if (rand > 0.8) type = 'FAMILY';
+        const y = groundY - 140 - (Math.random() * 60);
+        items.push({ x, y, width: 50, height: 50, type, label: ASSETS[type] });
     }
 
-    function checkCollision(p, o, objectType) {
-        if (objectType === 'OBSTACLE') {
-            const pPaddingX = 20, pPaddingY = 15, oPadding = 10;   
-            return (p.x + pPaddingX) < (o.x + o.width - oPadding) &&
-                   (p.x + p.width - pPaddingX) > (o.x + oPadding) &&
-                   (p.y + pPaddingY) < (o.y + o.height - oPadding) &&
-                   (p.y + p.height - pPaddingY) > (o.y + oPadding);
-        } else {
-            const magnetRangeX = 35, magnetRangeY = 5; 
-            return (p.x - magnetRangeX) < (o.x + o.width) &&
-                   (p.x + p.width + magnetRangeX) > (o.x) &&
-                   (p.y - magnetRangeY) < (o.y + o.height) &&
-                   (p.y + p.height + magnetRangeY) > (o.y);
-        }
-    }
-
-    function handleHit(obs) {
-        obstaclesHit++;
-        if (obs.type === 'BOTTLE') { hp -= 10; isDizzy = true; } 
-        else if (obs.type === 'PARTY') { hp -= 15; isVomiting = true; vomitTimer = 1500; isDizzy = true; }
-        if (hp < 0) hp = 0;
-    }
-
-    function handlePick(item) {
-        itemsCollected++;
-        if (item.type === 'CROSS') { isDizzy = false; hp += 5; }
-        else if (item.type === 'HEART') hp += 10;
-        else if (item.type === 'FAMILY') hp += 15;
-        if (hp > 100) hp = 100;
+    function checkCollision(p, o) {
+        const px = p.x + 15, py = p.y + 10, pw = p.width - 30, ph = p.height - 20;
+        const ox = o.x + 5, oy = o.y + 5, ow = o.width - 10, oh = o.height - 10;
+        return px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy;
     }
 
     function draw() {
         ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-        ctx.fillStyle = '#000000';
-        ctx.globalAlpha = 0.8; 
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
+        // 雲朵
+        ctx.globalAlpha = 0.6;
         clouds.forEach(c => {
             ctx.font = `${c.size}px Arial`;
             ctx.fillText(ASSETS.CLOUD, c.x, c.y);
         });
         ctx.globalAlpha = 1.0;
 
-        ctx.fillStyle = '#222';
+        // 地面
+        ctx.fillStyle = '#333';
         ctx.fillRect(0, groundY, logicalWidth, logicalHeight - groundY);
         
-        const dashWidth = 50, dashGap = 100, totalStep = dashWidth + dashGap;
-        const offsetX = (totalPixelsTraveled % totalStep);
-        
-        ctx.fillStyle = "rgba(255,255,255,0.2)";
-        for (let x = logicalWidth; x > -totalStep; x -= totalStep) {
-            ctx.fillRect(x - offsetX, groundY + 30, dashWidth, 8);
+        // 路面標記
+        const step = 150;
+        const offsetX = (totalPixelsTraveled % step);
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        for (let x = logicalWidth; x > -step; x -= step) {
+            ctx.fillRect(x - offsetX, groundY + 40, 60, 10);
         }
 
-        ctx.fillStyle = '#000000';
-        ctx.globalAlpha = 1.0;
-
-        if (hp >= 80) {
-            ctx.save();
-            ctx.font = "90px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText(ASSETS.SUN, logicalWidth - 90, 150);
-            ctx.restore();
-        }
-
+        // 玩家
         ctx.save();
         let playerEmoji = (gender === 'male') ? "🏃‍♂️" : "🏃‍♀️";
-        if (player.state === 'slumped') playerEmoji = (gender === 'male') ? "😫" : "😩";
-        if (player.state === 'proud') playerEmoji = (gender === 'male') ? "🏃‍♂️" : "🏃‍♀️";
         if (isVomiting) playerEmoji = "🤮";
-
-        let angle = 0;
-        if (gameState === 'PLAYING' && !isVomiting) {
-            if (!player.isGrounded) angle = -0.15;
-        }
+        else if (isDizzy) playerEmoji = (gender === 'male') ? "😵‍💫" : "😵‍💫";
+        else if (hp < 30) playerEmoji = (gender === 'male') ? "😫" : "😩";
 
         ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
-        if (isVomiting) ctx.rotate(Math.sin(Date.now() / 50) * 0.3);
-        else ctx.rotate(angle);
-
-        ctx.scale(-1, 1); 
-        ctx.font = "65px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        if (isVomiting) ctx.rotate(Math.sin(Date.now() / 50) * 0.2);
+        else if (!player.isGrounded) ctx.rotate(-0.1);
+        
+        ctx.scale(-1, 1); // 讓角色面向前方
+        ctx.font = "70px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText(playerEmoji, 0, 0);
         ctx.restore();
 
-        ctx.fillStyle = '#000000';
+        // 障礙物與物品
         ctx.textAlign = "left"; ctx.textBaseline = "top";
-        obstacles.forEach(o => { ctx.font = "42px Arial"; ctx.fillText(o.label, o.x, o.y); });
+        obstacles.forEach(o => { ctx.font = "45px Arial"; ctx.fillText(o.label, o.x, o.y); });
         items.forEach(i => { ctx.font = "55px Arial"; ctx.fillText(i.label, i.x, i.y); });
     }
 
     async function endGame(result) {
         gameState = result;
-        container.classList.remove('dizzy-effect');
-        container.classList.remove('low-hp-border');
-
+        container.classList.remove('dizzy-effect', 'low-hp-border');
         if (result === 'WON') document.getElementById('victory-screen').classList.remove('hidden');
         else document.getElementById('gameover-screen').classList.remove('hidden');
-        await logGame(result);
+        await logGameResult(result);
     }
 
-    window.onload = init;
+    window.onload = () => {
+        resize();
+        window.addEventListener('resize', resize);
+        setupUI();
+    };
 </script>
-
 </body>
 </html>
