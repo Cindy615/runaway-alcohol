@@ -153,7 +153,22 @@
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const firebaseConfig = JSON.parse(__firebase_config);
+    // 🔴 重要：如果您是在自己的伺服器架設，請將下方的內容替換成您 Firebase 的 Config 物件
+    // 如果您不知道怎麼拿，請參考 Firebase 控制台的專案設定。
+    let firebaseConfig;
+    try {
+        firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { /* 在此貼上您的 Firebase Config, 例如 apiKey: "...", authDomain: "..." */ };
+            
+        if (!firebaseConfig.apiKey) {
+            console.error("尚未設定 Firebase Config！按鈕功能可能失效。");
+        }
+    } catch (e) {
+        console.error("Firebase Config 解析錯誤", e);
+        firebaseConfig = {};
+    }
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -175,18 +190,17 @@
     let itemsCollected = 0; 
 
     let hp = 50;
-    let gameSpeed = 7; // 修改：初始速度改為 7
-    let baseSpeed = 7; // 修改：基準速度改為 7
+    let gameSpeed = 7; 
+    let baseSpeed = 7; 
     let isDizzy = false;
     let isVomiting = false;
     let vomitTimer = 0;
     let distance = 0;
     let totalPixelsTraveled = 0;
     
-    // --- 密度提升的關鍵變數 ---
     let lastSpawnDistance = 0; 
     let isFirstSpawn = true; 
-    let nextSpawnDistance = 50; // 控制下一次生成的間距 (數值越小越密集)
+    let nextSpawnDistance = 50; 
 
     let player = {
         x: 80, y: 0, width: 60, height: 80, vy: 0,
@@ -272,7 +286,7 @@
         } catch(e) { console.error("試算表回饋上傳失敗", e); }
 
         try {
-            if (userId) {
+            if (userId && firebaseConfig.apiKey) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedbacks'), {
                     userId: userId, nickname: nickname, text: text, timestamp: serverTimestamp()
                 });
@@ -335,6 +349,11 @@
         document.getElementById('start-btn').onclick = async function() {
             const input = document.getElementById('nickname-input').value.trim();
             if (!input) return;
+
+            if (!firebaseConfig.apiKey) {
+                alert("抱歉，Firebase 設定未完成，無法開始遊戲紀錄。請檢查程式碼中的 Config 設定。");
+                return;
+            }
             
             this.disabled = true;
             this.innerText = "載入中...";
@@ -347,6 +366,7 @@
                 startGame();
             } catch (error) {
                 console.error("登入失敗", error);
+                alert("連線失敗：" + error.message);
                 this.disabled = false;
                 this.innerText = "開始挑戰";
             }
@@ -370,9 +390,9 @@
         gameState = 'PLAYING';
         hp = 50; distance = 0; playTime = 0; obstaclesHit = 0; itemsCollected = 0; 
         timeEl.innerText = "00:00"; totalPixelsTraveled = 0;
-        lastSpawnDistance = -100; // 讓第一個物件快一點出現
+        lastSpawnDistance = -100; 
         isFirstSpawn = true; isDizzy = false; isVomiting = false;
-        nextSpawnDistance = 45; // 初始間距設定
+        nextSpawnDistance = 45; 
         gameSpeed = baseSpeed; obstacles = []; items = []; clouds = [];
         
         for (let i = 0; i < 3; i++) {
@@ -431,12 +451,9 @@
         if (isDizzy) container.classList.add('dizzy-effect');
         else container.classList.remove('dizzy-effect');
 
-        // 修改：全新的動態速度計算公式
-        // HP=0時為4.5，HP=50(初始)時為7，HP=100(滿血)時為9.5
         let targetSpeed = 4.5 + (hp / 100) * 5.0; 
         gameSpeed = targetSpeed * (isDizzy ? 0.85 : 1.0);
         
-        // 強制將速度精準控制在 5 ~ 9.5 的範圍內
         if (gameSpeed > 9.5) gameSpeed = 9.5;
         if (gameSpeed < 5 && hp > 0) gameSpeed = 5;
         
@@ -457,25 +474,22 @@
             player.isGrounded = true;
         }
 
-        // --- 全新高密度動態生成邏輯 ---
         if (distance - lastSpawnDistance > nextSpawnDistance) {
             if (isFirstSpawn) {
                 spawnObstacle(0);
                 isFirstSpawn = false;
-                nextSpawnDistance = 50; // 第一個之後很快就接下一個
+                nextSpawnDistance = 50; 
             } else if (isDizzy) {
-                // 頭暈時急需補血，道具會出得更頻繁
                 if (Math.random() > 0.4) { spawnItem(0, 'CROSS'); nextSpawnDistance = 45; }
                 else { spawnObstacle(0); spawnItem(150, 'CROSS'); nextSpawnDistance = 60; }
             } else {
                 const scenario = Math.random();
-                const isLateGame = playTime > 40; // 遊戲進入中後段
+                const isLateGame = playTime > 40; 
                 
                 if (isLateGame) {
-                    // 後期挑戰更緊湊
                     if (scenario < 0.3) { 
                         spawnObstacle(0); 
-                        if(Math.random() > 0.5) spawnObstacle(300); // 緊接著另一個障礙
+                        if(Math.random() > 0.5) spawnObstacle(300); 
                         nextSpawnDistance = 70; 
                     }
                     else if (scenario < 0.6) { 
@@ -485,11 +499,10 @@
                     }
                     else { 
                         spawnObstacle(0); 
-                        spawnItem(220); // 障礙物後面緊跟道具
+                        spawnItem(220); 
                         nextSpawnDistance = 65; 
                     }
                 } else {
-                    // 前期節奏
                     if (scenario < 0.35) { 
                         spawnObstacle(0); 
                         nextSpawnDistance = 50 + Math.random() * 15; 
